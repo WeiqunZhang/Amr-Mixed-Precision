@@ -3,17 +3,17 @@ PRECISION  = DOUBLE
 PROFILE    = FALSE
 
 DEBUG      = TRUE
-DEBUG      = FALSE
+#DEBUG      = FALSE
 
 DIM        = 2
 #DIM       = 3
 
 COMP	   = gnu
 
-USE_MPI    = TRUE
+USE_MPI    = FALSE
 USE_OMP    = FALSE
 USE_CUDA   = FALSE
-USE_PARTICLES = TRUE
+USE_PARTICLES = FALSE
 USE_BITTREE = FALSE
 
 Bpack   := ./Make.package

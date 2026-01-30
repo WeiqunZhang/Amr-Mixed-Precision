@@ -25,8 +25,8 @@ amr.v              = 1       # verbosity in Amr
 # *****************************************************************
 # Resolution and refinement
 # *****************************************************************
-amr.n_cell          = 64 64 8
-amr.max_level       = 2       # maximum level number allowed --
+amr.n_cell          = 128 128
+amr.max_level       = 1       # maximum level number allowed --
                               # number of levels = max_level + 1
 
 amr.ref_ratio       = 2 2 2 2 # refinement ratio between levels
@@ -68,7 +68,7 @@ adv.phierr = 1.01  1.1  1.5
 # Plotfile name and frequency
 # *****************************************************************
 amr.plot_file  = plt    # root name of plot file
-amr.plot_int   =  10    # number of timesteps between plot files
+amr.plot_int   =  20    # number of timesteps between plot files
                         # if negative then no plot files will be written
 
 # *****************************************************************
@@ -81,4 +81,6 @@ amr.chk_int  = -1       # number of timesteps between checkpoint files
 # *****************************************************************
 # Particles
 # *****************************************************************
-amr.do_tracers = 1      # Turn tracer particles on or off
+amr.do_tracers = 0      # Turn tracer particles on or off
+
+adv.double_precision = 0 1
