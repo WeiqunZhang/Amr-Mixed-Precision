@@ -49,10 +49,13 @@ void AmrCoreAdv::DefineVelocityAtLevel (int lev, amrex::Real a_time)
             Array4<RT> psi = psifab.array();
             GeometryData geomdata = geom[lev].data();
 
+            RT offset = (lev == 1) ? 5.e2 : 0.0;
+
             amrex::ParallelFor(psibox,
             [=] AMREX_GPU_DEVICE (int i, int j, int)
             {
                 get_face_velocity_psi(i, j, time, psi, geomdata);
+                psi(i,j,0) += offset;
             });
 
             amrex::ParallelFor
