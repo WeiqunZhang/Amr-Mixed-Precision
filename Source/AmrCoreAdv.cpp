@@ -526,11 +526,24 @@ AmrCoreAdv::PlotFileMF () const
     for (int i = 0; i <= finest_level; ++i) {
 	if (SamePrecision<MultiFab>(i)) {
 	    auto const& mf = std::get<MultiFab>(phi_new[i]);
-	    r.push_back(MultiFab(mf, amrex::make_alias, 0, mf.nComp()));
+            r.push_back(MultiFab(mf.boxArray(), mf.DistributionMap(), 3, 1));
 	} else {
-	    auto const& mf = std::get<fMultiFab>(phi_new[i]);
-	    r.push_back(amrex::cast<MultiFab>(mf));
+            auto const& mf = std::get<fMultiFab>(phi_new[i]);
+            r.push_back(MultiFab(mf.boxArray(), mf.DistributionMap(), 3, 1));
 	}
+        r[i].setVal(0);
+        const_cast<AmrCoreAdv&>(*this).FillPatch(i, t_new[i], r[i], 0, 1);
+        auto const& ma = r[i].arrays();
+        auto dx = geom[i].CellSizeArray();
+        ParallelFor(r[i], [=] AMREX_GPU_DEVICE (int b, int i, int j, int k)
+        {
+            auto const& a = ma[b];
+            a(i,j,k,1) = (a(i+1,j,k) - a(i-1,j,k)) / (Real(2)*dx[0])
+                +        (a(i,j+1,k) - a(i,j-1,k)) / (Real(2)*dx[1]);
+            a(i,j,k,2) = (a(i+1,j,k) + a(i-1,j,k) - Real(2)*a(i,j,k)) / (dx[0]*dx[0])
+                +        (a(i,j+1,k) + a(i,j-1,k) - Real(2)*a(i,j,k)) / (dx[1]*dx[1]);
+        });
+        Gpu::streamSynchronize();
     }
     return r;
 }
@@ -539,7 +552,7 @@ AmrCoreAdv::PlotFileMF () const
 Vector<std::string>
 AmrCoreAdv::PlotFileVarNames ()
 {
-    return {"phi"};
+    return {"phi", "div(phi)", "Lap(phi)"};
 }
 
 // write plotfile to disk
