@@ -16,6 +16,10 @@ void AmrCoreAdv::DefineVelocityAtLevel (int lev, amrex::Real a_time)
 						RT(geom[lev].CellSize(1)),
 					        RT(geom[lev].CellSize(2)))};
 
+    MF const& pn = std::get<MF>(phi_new[lev]);
+    MF phimf(pn.boxArray(), pn.DistributionMap(), 1, nghost+1);
+    FillPatch(lev, t_new[lev], phimf, 0, 1);
+
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -49,13 +53,12 @@ void AmrCoreAdv::DefineVelocityAtLevel (int lev, amrex::Real a_time)
             Array4<RT> psi = psifab.array();
             GeometryData geomdata = geom[lev].data();
 
-            RT offset = (lev == 1) ? 5.e2 : 0.0;
+            auto const& phi = phimf.const_array(mfi);
 
             amrex::ParallelFor(psibox,
             [=] AMREX_GPU_DEVICE (int i, int j, int)
             {
                 get_face_velocity_psi(i, j, time, psi, geomdata);
-                psi(i,j,0) += offset;
             });
 
             amrex::ParallelFor
@@ -63,11 +66,11 @@ void AmrCoreAdv::DefineVelocityAtLevel (int lev, amrex::Real a_time)
                  AMREX_D_DECL(
                      [=] AMREX_GPU_DEVICE (int i, int j, int k)
                      {
-                         get_face_velocity_x(i, j, k, vel[0], psi, dx[1]);
+                         get_face_velocity_x(i, j, k, vel[0], psi, dx[0], dx[1], phi);
                      },
                      [=] AMREX_GPU_DEVICE (int i, int j, int k)
                      {
-                         get_face_velocity_y(i, j, k, vel[1], psi, dx[0]);
+                         get_face_velocity_y(i, j, k, vel[1], psi, dx[0], dx[1], phi);
                      },
                      [=] AMREX_GPU_DEVICE (int i, int j, int k)
                      {
